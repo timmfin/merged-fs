@@ -110,7 +110,7 @@ class MergedFileSystem {
     }
 
     for (let [i, [mountPath, filesystem, subpath, aliasIfExist]] of toIterateOver.entries()) {
-      const iterResult = iterCallback(subpath, filesystem);
+      const iterResult = iterCallback(subpath, filesystem, mountPath);
 
       // sync iter func calls can return non-undefined value to stop iterating
       if (iterResult !== undefined) {
@@ -147,7 +147,7 @@ class MergedFileSystem {
 
     function iterate() {
       const [mountPath, filesystem, subpath, aliasIfExist] = toIterateOver[index];
-      iterCallback(subpath, filesystem, next);
+      iterCallback(subpath, filesystem, mountPath, next);
     }
 
     if (toIterateOver.length > 0) {
@@ -165,7 +165,7 @@ class MergedFileSystem {
 
     let stoppedEarly = false;
 
-    this._iterateOverFilesystemsAsync(filepath, (subpath, filesystem, next) => {
+    this._iterateOverFilesystemsAsync(filepath, (subpath, filesystem, mountPath, next) => {
       if (filesystem[funcName]) {
 
         filesystem[funcName](subpath, ...otherArgs, (error, result) => {
@@ -206,7 +206,7 @@ class MergedFileSystem {
     const errors = [],
           results = [];
 
-    const finalResult = this._iterateOverFilesystemsSync(filepath, (subpath, filesystem) => {
+    const finalResult = this._iterateOverFilesystemsSync(filepath, (subpath, filesystem, mountPath) => {
       if (filesystem[funcName]) {
         let result, error;
 
