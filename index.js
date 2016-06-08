@@ -1,6 +1,7 @@
 const path = require('path');
 const nodeFS = require('fs');
 
+const clone   = require('lodash/lang').clone;
 const unique  = require('lodash/array').uniq;
 const flatten = require('lodash/array').flatten;
 const compact = require('lodash/array').compact;
@@ -40,22 +41,56 @@ function ensureArray(possiblyArray) {
 
 
 class MergedFileSystem {
-  constructor(filesystemsByMountPath) {
+  constructor(initialFilesystemsByMountPath) {
     this.mountedPaths = new Map;
 
-    // Itereate over all the mount paths in reverse order (longest first)
-    // and insert into our map (so we can rely on insertion order).
-    Object.keys(filesystemsByMountPath).sort().reverse().forEach(mountPath => {
-      mountPath = ensureStartsWithSlash(mountPath);
-
-      let filesystems = ensureArray(filesystemsByMountPath[mountPath]);
-      this.mountedPaths.set(mountPath, filesystems);
-    });
+    this.addMountPoints(initialFilesystemsByMountPath);
 
     for(let [funcName, funcOptions] of SUPPORTED_FS_FUNCTIONS) {
       this[funcName] = this._callAsyncFunc.bind(this, funcName, funcOptions);
       this[`${funcName}Sync`] = this._callSyncFunc.bind(this, `${funcName}Sync`, funcOptions);
     };
+  }
+
+  addMountPoints(newMountPoints) {
+    const oldMountedPaths = this.mountedPaths;
+    const mountPointsToAdd = {};
+
+    // Create new map, instead of modifing existing one (to make sure we order
+    // the map by most specific mount points first)
+    this.mountedPaths = new Map();
+
+
+    // Cleanup input
+    for (let mountPath in newMountPoints) {
+      if (newMountPoints.hasOwnProperty(mountPath)) {
+        const newMountPath = ensureStartsWithSlash(mountPath);
+        mountPointsToAdd[newMountPath] = ensureArray(newMountPoints[mountPath]);
+      }
+    }
+
+    if (oldMountedPaths) {
+      // Add existing mount points to new ones
+      for (let [mountPath, filesystems] of oldMountedPaths.entries()) {
+        if (mountPointsToAdd[mountPath]) {
+          mountPointsToAdd[mountPath] = mountPointsToAdd[mountPath].concat(filesystems);
+        } else {
+          mountPointsToAdd[mountPath] = filesystems;
+        }
+      }
+    }
+
+    // Itereate over all the mount paths in reverse order (longest first)
+    // and insert into our map (so we can rely on insertion order).
+    Object.keys(mountPointsToAdd).sort().reverse().forEach(mountPath => {
+      this.mountedPaths.set(mountPath, mountPointsToAdd[mountPath]);
+    });
+  }
+
+  addMountPoint(newMountPoint, filesystem) {
+    this.addMountPoints({
+      [newMountPoint]: filesystem
+    });
   }
 
   _gatherStuffToIterateOver(filepath) {
@@ -235,7 +270,8 @@ class MergedFileSystem {
       }
     } else if (finalResult === undefined) {
       // it should have returned earlier, must have only been errors, so throw
-      throw errors;
+      // throw errors;
+      throw errors[0];
     } else {
       return finalResult;
     }

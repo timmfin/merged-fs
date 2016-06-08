@@ -117,6 +117,55 @@ describe('MergedFS', () => {
     });
   });
 
+  describe('can be incrementally created', () => {
+    before(() => {
+      this.fs = createMergedFileSystem({});
+    });
+
+    it('add first mount point later', () => {
+      this.fs.addMountPoints({
+        "/": tempDir
+      });
+
+      var content = this.fs.readFileSync(tempFilename).toString();
+      content.should.be.a.String();
+
+      // Ensure it doesn't fallthrough to the real fs
+      console.log("this.fs.mountedPaths", this.fs.mountedPaths);
+      should.throws(() => this.fs.statSync(__dirname).isDirectory().should.be.true());
+    });
+
+    it('add another mount point', () => {
+      this.fs.addMountPoint("/fallthrough", ["/NOT REAL", tempDir]);
+
+      var content = this.fs.readFileSync(tempFilename).toString();
+      content.should.be.a.String();
+
+      var content = this.fs.readFileSync(path.join("/fallthrough", tempFilename)).toString();
+      content.should.be.a.String();
+    });
+
+    it('add yet another mount point, included one that merges with a previous one', () => {
+      this.fs.addMountPoints({
+        "/tmp": "/NOT REAL",
+        "/": nodefs
+      });
+
+      var content = this.fs.readFileSync(tempFilename).toString();
+      content.should.be.a.String();
+
+      var content = this.fs.readFileSync(path.join("/fallthrough", tempFilename)).toString();
+      content.should.be.a.String();
+
+      var content = this.fs.readFileSync(tempFilepath).toString();
+      content.should.be.a.String();
+
+      // Ensure it does fallthrough to the real fs now (since there are multiple
+      // filesystems attached to `/`)
+      this.fs.statSync(__dirname).isDirectory().should.be.true();
+    });
+  });
+
   describe('custom filesystems', () => {
     beforeEach(() => {
       this.fs = createMergedFileSystem({
