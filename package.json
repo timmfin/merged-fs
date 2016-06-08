@@ -1,0 +1,23 @@
+{
+  "name": "merged-fs",
+  "version": "0.1.0",
+  "description": "Creates a proxy fs object (mimicing the node fs API) that merges together multiple filesystem instances and/or paths at different parts of the actual filesystem.",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "keywords": [
+    "fs",
+    "filesystem",
+    "merge"
+  ],
+  "author": "tfinley@hubspot.com",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.13.1",
+    "should": "^9.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.5.3"
+  }
+}
