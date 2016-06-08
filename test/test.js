@@ -153,6 +153,44 @@ describe('MergedFS', () => {
         done()
       });
     });
+
+  });
+
+  describe('custom filesystems with errors', () => {
+    beforeEach(() => {
+      this.fs = createMergedFileSystem({
+        "/custom with errors": [{
+          readdirSync: function(filepath) {
+            throw new Error('Nice try');
+          },
+
+          readdir: function(filepath, callback) {
+            throw new Error('Nice try');
+          }
+        }, {
+          readdirSync: function(filepath) {
+            throw new Error('Nice try');
+          },
+
+          readdir: function(filepath, callback) {
+            throw new Error('Nice try');
+          }
+        }]
+      });
+    });
+
+
+    it('should readdir synchronously (and merge files)', () => {
+      should.throws(() => this.fs.readdirSync(path.join('/custom with errors', tempDir)));
+    });
+
+    // Throws syncrhonously???
+    it.skip('should readdir asynchronously (and merge files)', (done) => {
+      var files = this.fs.readdir(path.join('/custom with errors', tempDir), (error, files) => {
+        error.message.should.be.equal('Nice try');
+      });
+    });
+
   });
 
   describe('multiple mount point fallthrough', () => {
