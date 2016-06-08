@@ -180,12 +180,12 @@ describe('MergedFS', () => {
     });
 
 
-    it('should readdir synchronously (and merge files)', () => {
+    it('should throw an error synchronously', () => {
       should.throws(() => this.fs.readdirSync(path.join('/custom with errors', tempDir)));
     });
 
     // Throws syncrhonously???
-    it.skip('should readdir asynchronously (and merge files)', (done) => {
+    it.skip('should call async callbak with errors', (done) => {
       var files = this.fs.readdir(path.join('/custom with errors', tempDir), (error, files) => {
         error.message.should.be.equal('Nice try');
       });
