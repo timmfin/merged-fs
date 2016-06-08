@@ -105,6 +105,10 @@ class MergedFileSystem {
           collectedErrors = [],
           collectedResults = [];
 
+    if (toIterateOver.length === 0) {
+      throw new Error(`No mount points match: ${filepath}`);
+    }
+
     for (let [i, [mountPath, filesystem, subpath, aliasIfExist]] of toIterateOver.entries()) {
       const iterResult = iterCallback(subpath, filesystem);
 
@@ -146,7 +150,12 @@ class MergedFileSystem {
       iterCallback(subpath, filesystem, next);
     }
 
-    iterate();
+    if (toIterateOver.length > 0) {
+      iterate();
+    } else {
+      console.error(`No mount points match: ${filepath}`)
+      doneCallback(new Error(`No mount points match: ${filepath}`), undefined);
+    }
   }
 
   _callAsyncFunc(funcName, funcOptions, filepath, ...otherArgs) {
