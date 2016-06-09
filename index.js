@@ -201,7 +201,9 @@ class MergedFileSystem {
     let stoppedEarly = false;
 
     this._iterateOverFilesystemsAsync(filepath, (subpath, filesystem, mountPath, next) => {
-      if (filesystem[funcName]) {
+      if (!filesystem[funcName]) {
+        next(new Error('filessytem has no such function: ' + funcName));
+      } else {
 
         filesystem[funcName](subpath, ...otherArgs, (error, result) => {
           errors.push(error);  // TODO, do something with these?
