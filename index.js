@@ -15,7 +15,7 @@ const SUPPORTED_FS_FUNCTIONS = new Map()
 
     mergeResults: (errors, results) => {
       if (compact(results).length === 0) {
-        return [errors, undefined];
+        return [errors[0], undefined];
       } else {
         const result = unique(compact(flatten(results))).sort();
         return [undefined, result];
@@ -234,7 +234,7 @@ class MergedFileSystem {
       } else if (!stoppedEarly) {
         // If we fell through the whole way and all were errors, make sure we call
         // the callback with some error (pass them all? just the first/last one?)
-        callback(errors, undefined);
+        callback(errors[0], undefined);
       }
 
 
