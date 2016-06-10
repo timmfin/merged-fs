@@ -24,7 +24,10 @@ const SUPPORTED_FS_FUNCTIONS = new Map()
   });
 
 function ensureStartsWithSlash(somepath) {
-  if (somepath[0] !== '/') {
+  if (somepath[0] === '.' && somepath[1] === '/') {
+    // UGH, ideally no relative paths ever get here... right (currently from imports in a sass-loader?)
+    somepath = somepath.slice(1);
+  } else if (somepath[0] !== '/') {
     somepath = `/${somepath}`;
   }
 
