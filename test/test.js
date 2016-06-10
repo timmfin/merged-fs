@@ -214,7 +214,7 @@ describe('MergedFS', () => {
           },
 
           readdir: function(filepath, callback) {
-            throw new Error('Nice try');
+            callback(new Error('Nice try'));
           }
         }, {
           readdirSync: function(filepath) {
@@ -222,7 +222,7 @@ describe('MergedFS', () => {
           },
 
           readdir: function(filepath, callback) {
-            throw new Error('Nice try');
+            callback(new Error('Nice try'));
           }
         }]
       });
@@ -233,10 +233,12 @@ describe('MergedFS', () => {
       should.throws(() => this.fs.readdirSync(path.join('/custom with errors', tempDir)));
     });
 
-    // Throws syncrhonously???
-    it.skip('should call async callbak with errors', (done) => {
+    it('should call async callback with errors', (done) => {
       var files = this.fs.readdir(path.join('/custom with errors', tempDir), (error, files) => {
+        should(files).be.undefined();
+        error.should.be.ok();
         error.message.should.be.equal('Nice try');
+        done();
       });
     });
 
