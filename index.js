@@ -44,7 +44,7 @@ function ensureArray(possiblyArray) {
 
 
 class MergedFileSystem {
-  constructor(initialFilesystemsByMountPath) {
+  constructor(initialFilesystemsByMountPath = {}) {
     this.mountedPaths = new Map;
 
     this.addMountPoints(initialFilesystemsByMountPath);
@@ -53,6 +53,18 @@ class MergedFileSystem {
       this[funcName] = this._callAsyncFunc.bind(this, funcName, funcOptions);
       this[`${funcName}Sync`] = this._callSyncFunc.bind(this, `${funcName}Sync`, funcOptions);
     };
+  }
+
+  clone() {
+    const clone = new MergedFileSystem();
+
+    // Clone the internal map _and_ the arrays for each value
+    clone.mountedPaths = new Map(this.mountedPaths);
+    for (let [key, value] of clone.mountedPaths.entries()) {
+      clone.mountedPaths.set(key, value.slice());
+    }
+
+    return clone;
   }
 
   addMountPoints(newMountPoints) {
