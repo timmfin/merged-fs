@@ -257,6 +257,69 @@ describe('MergedFS', () => {
 
   });
 
+  describe('custom filesystems with alias', () => {
+    beforeEach(() => {
+      this.fs = createMergedFileSystem({
+        "/custom": [{
+          alias: "alias1",
+
+          filesystem: {
+            readdirSync: function(filepath) {
+              if (filepath.startsWith('/alias1/rest/')) {
+                return ["FOOBAR", "YEAH, not a real FS..."]
+              } else {
+                return [];
+              }
+            },
+
+            readdir: function(filepath, callback) {
+              if (filepath.startsWith('/alias1/rest/')) {
+                callback(undefined, ["FOOBAR", "YEAH, not a real FS..."]);
+              } else {
+                callback(undefined, []);
+              }
+            }
+          }
+        }, {
+          alias: "/",
+
+          filesystem: {
+            readdirSync: function(filepath) {
+              if (filepath.startsWith('/rest/')) {
+                return ["Allo", "FOOBAR"]
+              } else {
+                return [];
+              }
+            },
+
+            readdir: function(filepath, callback) {
+              if (filepath.startsWith('/rest/')) {
+                callback(undefined, ["Allo", "FOOBAR"]);
+              } else {
+                callback(undefined, []);
+              }
+            }
+          }
+        }]
+      });
+    });
+
+    it('should readdir synchronously (and merge files)', () => {
+      var files = this.fs.readdirSync(path.join('/custom/rest', tempDir));
+      files.should.be.an.Array();
+      files.should.match(["Allo", "FOOBAR", "YEAH, not a real FS..."]);
+    });
+
+    it('should readdir asynchronously (and merge files)', (done) => {
+      var files = this.fs.readdir(path.join('/custom/rest', tempDir), (error, files) => {
+        files.should.be.an.Array();
+        files.should.match(["Allo", "FOOBAR", "YEAH, not a real FS..."]);
+        done()
+      });
+    });
+
+  });
+
   describe('multiple mount point fallthrough', () => {
     beforeEach(() => {
       this.fs = createMergedFileSystem({

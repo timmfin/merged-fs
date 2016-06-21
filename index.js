@@ -44,9 +44,9 @@ function ensureArray(possiblyArray) {
 
 
 class MergedFileSystem {
-  constructor(initialFilesystemsByMountPath = {}) {
+  constructor(initialFilesystemsByMountPath = {}, rootFS = nodeFS) {
     this.mountedPaths = new Map;
-
+    this.rootFS = rootFS
     this.addMountPoints(initialFilesystemsByMountPath);
 
     for(let [funcName, funcOptions] of SUPPORTED_FS_FUNCTIONS) {
@@ -56,7 +56,7 @@ class MergedFileSystem {
   }
 
   clone() {
-    const clone = new MergedFileSystem();
+    const clone = new MergedFileSystem({}, this.rootFS);
 
     // Clone the internal map _and_ the arrays for each value
     clone.mountedPaths = new Map(this.mountedPaths);
@@ -80,7 +80,24 @@ class MergedFileSystem {
     for (let mountPath in newMountPoints) {
       if (newMountPoints.hasOwnProperty(mountPath)) {
         const newMountPath = ensureStartsWithSlash(mountPath);
-        mountPointsToAdd[newMountPath] = ensureArray(newMountPoints[mountPath]);
+
+        mountPointsToAdd[newMountPath] = ensureArray(newMountPoints[mountPath]).map(fs => {
+          let result;
+
+          // Convert string aliases to objects with alias property
+          if (typeof fs === 'string') {
+            result = { alias: fs };
+          } else {
+            result = fs;
+          }
+
+          // Ensure any alias (string shortcut or property) start with a slash
+          if (result.alias) {
+            result.alias = ensureStartsWithSlash(result.alias);
+          }
+
+          return result;
+        });
       }
     }
 
@@ -124,22 +141,21 @@ class MergedFileSystem {
         }
 
         for (let filesystem of filesystems) {
-          let potentialSubpathAlias = subpath;
-          let potentialAliasFS = undefined;
+          let potentialSubpath = subpath;
+          let potentialAlias = undefined;
 
-          // Treat "string" filesystems as simple "aliases" to some place on the
-          // native filesystem
-          if (typeof filesystem === 'string') {
-            potentialSubpathAlias = path.join(filesystem, subpath);
-            potentialAliasFS = filesystem;
-            filesystem = nodeFS;
+          // If there is an alias property (likely from a string shortcut), use that
+          if (filesystem.alias) {
+            potentialSubpath = path.join(filesystem.alias, subpath);
+            potentialAlias = filesystem.alias;
+            filesystem = filesystem.filesystem || this.rootFS;
           }
 
           toIterateOver.push([
             mountPath,
             filesystem,
-            potentialSubpathAlias,
-            potentialAliasFS
+            potentialSubpath,
+            potentialAlias
           ])
         }
       }
