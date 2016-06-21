@@ -219,7 +219,7 @@ class MergedFileSystem {
     if (toIterateOver.length > 0) {
       iterate();
     } else {
-      console.error(`No mount points match: ${filepath}`)
+      // console.error(`No mount points match: ${filepath}`)
       doneCallback(new Error(`No mount points match: ${filepath}`), undefined);
     }
   }
