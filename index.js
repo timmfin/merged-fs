@@ -313,6 +313,24 @@ class MergedFileSystem {
     }
   }
 
+
+  // CUSTOM Webpack-ish stuff (should this be a separate project that wraps merged-fs?)
+
+  purge(pathsToPurge) {
+    if (!pathsToPurge) {
+      pathsToPurge = ['/'];
+    }
+
+    for (let filepath of pathsToPurge) {
+      this._iterateOverFilesystemsSync(filepath, (subpath, filesystem, mountPath) => {
+        if (typeof filesystem.purge === 'function') {
+          filesystem.purge(filepath);
+        }
+      });
+    }
+
+  }
+
 }
 
 /* Creates a proxy fs object (mimicing the node fs API) that merges together
