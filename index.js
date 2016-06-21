@@ -14,7 +14,7 @@ const SUPPORTED_FS_FUNCTIONS = new Map()
     returnFirstValue: false,
 
     mergeResults: (errors, results) => {
-      if (compact(results).length === 0) {
+      if (errors.length > 0 && compact(results).length === 0) {
         return [errors[0], undefined];
       } else {
         const result = unique(compact(flatten(results))).sort();
@@ -238,7 +238,7 @@ class MergedFileSystem {
           }
         })
       }
-    }, function doneIteration() {
+    }, function doneIteration(outsideError) {
       if (funcOptions.mergeResults) {
         const [mergedError, mergedResult] = funcOptions.mergeResults(errors, results);
         callback(mergedError, mergedResult);
@@ -246,10 +246,13 @@ class MergedFileSystem {
       } else if (!stoppedEarly) {
         // If we fell through the whole way and all were errors, make sure we call
         // the callback with some error (pass them all? just the first/last one?)
-        callback(errors[0], undefined);
+        let errorToReturn = outsideError || errors;
+        if (Array.isArray(errorToReturn)) {
+          errorToReturn = errorToReturn[0];
+        }
+
+        callback(errorToReturn, undefined);
       }
-
-
     });
 
   }

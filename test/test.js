@@ -270,8 +270,9 @@ describe('MergedFS', () => {
     });
 
     it('should call async callback with several errors', () => {
-      this.fs.stat('/many but all broken/NUTHIN', (errors) => {
-        errors.length.should.be.equal(4);
+      this.fs.stat('/many but all broken/NUTHIN', (error) => {
+        error.should.be.ok();
+        error.code.should.equal('ENOENT');
       });
     });
   });
