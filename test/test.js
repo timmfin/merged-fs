@@ -8,6 +8,19 @@ var tempDir = '/tmp/temp-MergedFS';
 var tempFilename = 'test-file.txt';
 var tempFilepath = path.join(tempDir, tempFilename);
 
+
+try {
+  if (nodefs.statSync(tempFilepath)) {
+    nodefs.unlinkSync(tempFilepath);
+  }
+} catch (whoCares) {}
+
+try {
+  if (nodefs.statSync(tempDir)) {
+    nodefs.rmdirSync(tempDir);
+  }
+} catch (whoCares) {}
+
 describe('MergedFS', () => {
   beforeEach(() => {
     nodefs.mkdirSync(tempDir);
