@@ -336,35 +336,7 @@ class MergedFileSystem {
 /* Creates a proxy fs object (mimicing the node fs API) that merges together
    multiple filesystem instances and/or paths at different parts of the actual filesystem.
 
-      createMergedFileSystem({
-        "/": require('fs'),  // fallthrough to the native filesystem
-
-        // point a "mount point" to a specific FS impl
-        "/mount-point-1": customFSInstance,
-
-        // make an alias, so that `/an-alias/dir/file.txt` ends up hitting `/some/path/file.txt`
-        "/an-alias: "/some/path",
-
-        // have fallbacks for a specific mount point
-        "/another-mount-point": [
-          customFSInstance2,
-          customFSInstance3,
-          "/some/fs/path"
-        ]
-      });
-
-  Only supports the following node FS APIs so far (both sync and async):
-    - stat
-    - readdir
-    - readFile
-    - readlink
-
-  And by default, all of those functions will return the first successful result.
-  However, `readdir` will merge all the successful results together into a single
-  array.
-
-
-  NOTE, intentially completely ignoring windows paths and using unix-style paths (for now?)
+   See more info and usage in the Readme and tests.
 */
 function createMergedFileSystem(filesystemsByMountPath) {
   return new MergedFileSystem(filesystemsByMountPath);
