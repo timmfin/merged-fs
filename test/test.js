@@ -88,6 +88,62 @@ describe('MergedFS', () => {
 
   });
 
+  describe('root fallthrough 2', () => {
+    beforeEach(() => {
+      this.fs = createMergedFileSystem({
+        "/": "/"
+      });
+    });
+
+    it('should read files synchronously', () => {
+      var content = this.fs.readFileSync(tempFilepath).toString();
+      content.should.be.a.String();
+      content.length.should.be.greaterThan(0);
+    });
+
+    it('should read files asynchronously', (done) => {
+      this.fs.readFile(tempFilepath, (err, result) => {
+        var content = result.toString();
+        content.should.be.a.String();
+        content.length.should.be.greaterThan(0);
+        done();
+      });
+    });
+
+    it('should stat files synchronously', () => {
+      var stats = this.fs.statSync(tempFilepath)
+      stats.should.be.ok();
+      stats.isFile().should.be.true();
+    });
+
+    it('should stat files asynchronously', (done) => {
+      this.fs.stat(tempFilepath, (err, stats) => {
+        stats.should.be.ok();
+        stats.isFile().should.be.true();
+        done();
+      });
+    });
+
+    it('should read dirs synchronously', () => {
+      var files = this.fs.readdirSync(tempDir);
+      files.should.be.an.Array();
+      files.should.match([
+        tempFilename
+      ]);
+    });
+
+    it('should read dirs asynchronously', (done) => {
+      this.fs.readdir(tempDir, (err, files) => {
+        files.should.be.an.Array();
+        files.should.match([
+          tempFilename
+        ]);
+        done();
+      });
+    });
+
+  });
+
 
 
   describe('string alias', () => {
